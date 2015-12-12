@@ -55,10 +55,11 @@ function makeTitleBitmaps()
 function loadFragments()
 {
     fragments = new Array();
+    colours = new Array();
+    
     request = new XMLHttpRequest();
     request.open("GET", "resources/utah-teapot.shattered.poly",false); // Blocking, todo
     request.send(null);
-    console.log(request.responseText);
 
     lineArray = request.responseText.split("\n");
     for(var l = 0;l< lineArray.length; l++) {
@@ -71,6 +72,11 @@ function loadFragments()
 	    poly.push([xy[0]/2+100, xy[1]/2-50]); // Hax
 	}
 	fragments.push(new TaggedPoly("poly"+l, poly, null));
+	col = "#"
+	for(var i=0;i<3;i++)
+	    col += (Math.floor(Math.random()*127)+127).toString(16);
+	colours.push(col);
+	console.log("Colour "+l+": "+col);
     }
 }
 
@@ -84,7 +90,6 @@ function resetGame()
     dx = -8;
     dy = -8;
 
-
     loadFragments();
 
 }
@@ -93,6 +98,7 @@ function init()
 {
     mode = MODE_TITLE;
     playerImage = getImage("skateboard");
+    bullImage = getImage("bull");
     springSound = new Audio("audio/boing.wav");
     makeTitleBitmaps();
     return true;
@@ -145,6 +151,11 @@ function getTaggedPolyLines(taggedPolygon)
 function degrees(r) {
     return r*(180/Math.PI);
 }
+
+function radians(r) {
+    return r*(Math.PI/180);
+}
+
 
 function lineIntersection(ballx, bally, ballxv, ballyv,
 			  lstartx, lstarty, lxv, lyv)
@@ -361,15 +372,26 @@ function draw() {
 
     ctx.drawImage(playerImage, batx, baty);
     ctx.beginPath();
+    ctx.arc(x, y, 20, 0, 2 * Math.PI, false);
+    ctx.fillStyle = 'rgba(255,0,255,0.5)';
+    ctx.fill();
+    ctx.beginPath();
     ctx.arc(x, y, 16, 0, 2 * Math.PI, false);
-    ctx.strokeStyle = 'white';
-    ctx.stroke();
+    ctx.fillStyle = 'rgba(255,0,255,1.0)';
+    ctx.fill();
+    ctx.save();
+    ctx.translate(x,y);
+    angle = Math.atan2(dy, dx);
+    ctx.rotate(angle);
+    ctx.drawImage(bullImage, -16, -16, 32,32);
+    ctx.restore();
 
     ctx.fillStyle = 'red';
 
     for(f=0;f<fragments.length;f++) {
 	if(fragments[f].alive == false) continue;
 	poly = fragments[f].poly;
+	ctx.fillStyle = colours[f];
 	ctx.beginPath();
 	ctx.moveTo(poly[0][0], poly[0][1]);
 	for(p=1;p<poly.length;p++) {
@@ -377,7 +399,7 @@ function draw() {
 	    ctx.lineTo(point[0], point[1]);
 	}
 	ctx.closePath();
-	ctx.stroke()
+	ctx.fill()
 	}
 
     if(mode == MODE_WIN) {

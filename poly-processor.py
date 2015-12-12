@@ -40,8 +40,8 @@ while True:
                 coord[0] += x
                 coord[1] += y
             else:
-                coord[0] += x
-                coord[1] += y
+                coord[0] = x
+                coord[1] = y
             coords.append("%f,%f" % tuple(coord))
 
     print " ".join(coords)

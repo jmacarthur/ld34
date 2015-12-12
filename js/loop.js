@@ -55,7 +55,6 @@ function makeTitleBitmaps()
 function loadFragments()
 {
     fragments = new Array();
-
     request = new XMLHttpRequest();
     request.open("GET", "resources/utah-teapot.shattered.poly",false); // Blocking, todo
     request.send(null);
@@ -69,7 +68,7 @@ function loadFragments()
 	for(var p=0;p < pointArray.length;p++) {
 	    point = pointArray[p];
 	    xy = point.split(",");
-	    poly.push([xy[0]/2, xy[1]/2]);
+	    poly.push([xy[0]/2+100, xy[1]/2-50]); // Hax
 	}
 	fragments.push(new TaggedPoly("poly"+l, poly, null));
     }
@@ -79,10 +78,11 @@ function loadFragments()
 function resetGame()
 {
     batx = 128;
+    baty = 450;
     x = 320;
-    y = 128;
+    y = baty;
     dx = -8;
-    dy = 8;
+    dy = -8;
 
 
     loadFragments();
@@ -162,6 +162,7 @@ function lineLen(x,y)
 
 function intersectPoly(poly, collisions, ball, considerRadius, lastCollisionObjectID)
 {
+    if(!poly.alive) return;
     lines = getTaggedPolyLines(poly);
     hitline = null;
     lowi = 1.1;
@@ -240,7 +241,6 @@ function intersectPoly(poly, collisions, ball, considerRadius, lastCollisionObje
         collisions.push(new Collision(ball.x + lowi*ball.dx, ball.y+lowi*ball.dy, lowi, outangle,poly));
 	console.log("Intersection with polygon "+poly.ident+" line "+hitline.ident);
     }
-    return collisions;
 }
 
 function checkClosestApproach(point, startx, starty, dx, dy)
@@ -288,32 +288,46 @@ function animate()
     if(y > SCREENHEIGHT || y<0)  dy = -dy;
     var ball = { 'x': x, 'y': y, 'dx': dx, 'dy': dy, 'radius': 16 };
     collisions = new Array();
-    for(f=0;f<fragments.length;f++) {
-	poly = fragments[f];
-	lastCollisionObjectID = "";
-	collisions = intersectPoly(poly, collisions, ball, 1, lastCollisionObjectID);
-    }
-
-    points = new Array();
-    for(f=0;f<fragments.length;f++) {
-	poly = fragments[f];
-	for(p=0;p<poly.poly.length;p++) {
-	    points.push(new TaggedPoint(poly.poly[p], poly, p));
-	}	
-    }
-
-    intersectVertices(points, collisions, ball.x,ball.y,ball.dx,ball.dy, ball.radius,lastCollisionObjectID)
-    closestDist = 1.1;
     closest = null;
-
-    for(c=0;c<collisions.length;c++) {
-	col = collisions[c];
-        console.log(col.ix, col.iy, col.dist, col.outAngle);
-        if(col.dist < closestDist) {
-            closest = col;
-            closestDist = col.dist;
+    lastCollisionObjectID = null;
+    if(y > (baty - ball.radius) && dy > 0) {
+	if(x > batx-8 && x < (batx+playerImage.width+8) ) {
+	    dy = -Math.abs(dy);
+	}
+	if(y>470) {
+	    resetGame();
 	}
     }
+    else
+    {
+	for(f=0;f<fragments.length;f++) {
+	    poly = fragments[f];
+	    lastCollisionObjectID = "";
+	    intersectPoly(poly, collisions, ball, 1, lastCollisionObjectID);
+	}
+	
+	points = new Array();
+	for(f=0;f<fragments.length;f++) {
+	    poly = fragments[f];
+	    if(poly.alive == false) continue;
+	    for(p=0;p<poly.poly.length;p++) {
+		points.push(new TaggedPoint(poly.poly[p], poly, p));
+	    }	
+	}
+	
+	intersectVertices(points, collisions, ball.x,ball.y,ball.dx,ball.dy, ball.radius,lastCollisionObjectID)
+	closestDist = 1.1;
+	
+	for(c=0;c<collisions.length;c++) {
+	    col = collisions[c];
+	    console.log(col.ix, col.iy, col.dist, col.outAngle);
+	    if(col.dist < closestDist) {
+		closest = col;
+		closestDist = col.dist;
+	    }
+	}
+    }
+    
     if(closest != null) {
         console.log("Identified collision as "+closest.obj.ident+" at dist "+closestDist);
 	ctx.beginPath();
@@ -345,7 +359,7 @@ function draw() {
 	return;
     }
 
-    ctx.drawImage(playerImage, batx, 450);
+    ctx.drawImage(playerImage, batx, baty);
     ctx.beginPath();
     ctx.arc(x, y, 16, 0, 2 * Math.PI, false);
     ctx.strokeStyle = 'white';

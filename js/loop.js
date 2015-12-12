@@ -61,7 +61,7 @@ function resetGame()
     dy = 4;
 
     fragments = [
-	[[316.000000,468.000000],[302.000000,514.000000],[235.000000,514.000000],[218.000000,488.000000],[243.000000,433.000000],[295.000000,433.000000]],
+	[[500.000000,368.000000],[302.000000,414.000000],[235.000000,414.000000],[218.000000,388.000000],[243.000000,333.000000],[295.000000,333.000000]],
 	[[243.000000,433.000000],[218.000000,488.000000],[164.000000,487.000000],[159.000000,456.000000],[176.000000,415.000000],[227.000000,414.000000]],
 	[[204.000000,362.000000],[213.000000,384.000000],[205.000000,404.000000],[167.000000,403.000000],[201.000000,433.000000],[97.000000,368.000000],[145.000000,360.000000]]
     ];
@@ -81,7 +81,7 @@ function TaggedPoint(coords, polygon, pointid)
 {
     this.x1 = coords[0];
     this.y1 = coords[1];
-    this.ident = "p%dv%d"%(polygon.ident,pointid)
+    this.ident = polygon.ident+"-"+pointid;
     this.polygon = polygon
 }
 
@@ -92,7 +92,7 @@ function TaggedLine(x1, y1, x2, y2, polygon, lineid){
     this.y1 = y1;
     this.y2 = y2;
     this.polygon = polygon;
-    this.ident = "p"+polygon.ident+lineid;
+    this.ident = polygon.ident+"-l"+lineid;
 }
 
 function TaggedPoly(ident, pointarray, region) {
@@ -205,7 +205,7 @@ function intersectPoly(poly, collisions, ball, considerRadius, lastCollisionObje
         ballToIntersectX /= distToIntersect;
         ballToIntersectY /= distToIntersect;
         angle = Math.acos(ballToIntersectX*lnormx+ballToIntersectY*lnormy);
-        console.log("Collision is at %f degrees to surface normal"+degrees(angle));
+        console.log("Collision is at "+degrees(angle)+" degrees to surface normal");
         normAngle = Math.atan2(lnormy,lnormx)+Math.PI;
         incident = Math.atan2(ball.dy,ball.dx)+Math.PI;
         angle =  incident - normAngle;
@@ -216,7 +216,7 @@ function intersectPoly(poly, collisions, ball, considerRadius, lastCollisionObje
         //    outangle = incident - Math.PI;
 	//}
         collisions.push(new Collision(ball.x + lowi*ball.dx, ball.y+lowi*ball.dy, lowi, outangle,hitline));
-	console.log("Intersection with polygon "+poly.ident);
+	console.log("Intersection with polygon "+poly.ident+" line "+hitline.ident);
     }
     return collisions;
 }
@@ -237,23 +237,25 @@ function intersectVertices(points, collisions, ballx,bally,ballxv,ballyv, ballRa
 	p = points[pointindex];
         if(p.ident == lastCollisionObjectID) continue;
         res = checkClosestApproach(p,ballx,bally,ballxv,ballyv);
+
 	d = res[0]; i = res[1];
+        console.log("Closest approach to "+p.ident+" is "+d);
         if(d<ballRadius) {
             diff = ballRadius - d;
             dist = Math.sqrt(ballRadius*ballRadius-d*d);
-            iPoint = (lineLen(ballxv,ballyv)*i-dist)/lineLen(ballxv,ballyv) // Distance to intersect
+            iPoint = (lineLen(ballxv,ballyv)*i-dist)/lineLen(ballxv,ballyv); // Distance to intersect
             if(iPoint >=0 && iPoint <=1) {
                 ix = ballx+ballxv*iPoint;
                 iy = bally+ballyv*iPoint;
                 radiusAng = Math.atan2(iy-p.y1,ix-p.x1);
                 incident = Math.atan2(ballyv,ballxv)+Math.PI;
                 angle =  incident - radiusAng;
-                console.log("Incident angle = "+degrees(incident));
+                console.log("Collides with ident "+p.ident+" Incident angle = "+degrees(incident));
                 console.log("Surface normal angle = "+degrees(radiusAng));
                 outangle = radiusAng - angle;
                 //if(p.polygon.region.collide == False):
                 //outangle = incident-Math.PI
-                collisions.push(Collision(ix,iy, iPoint, outangle, p))
+                collisions.push(new Collision(ix,iy, iPoint, outangle, p))
 	    }
 	}
     }
@@ -261,11 +263,9 @@ function intersectVertices(points, collisions, ballx,bally,ballxv,ballyv, ballRa
 
 function animate()
 {
-    x += dx;
-    y += dy;
     if(x > SCREENWIDTH || x<0)  dx = -dx;
     if(y > SCREENHEIGHT || y<0)  dy = -dy;
-    var ball = { 'x': x, 'y': y, 'dx': dx, 'dy': dy, 'radius': 64 };
+    var ball = { 'x': x, 'y': y, 'dx': dx, 'dy': dy, 'radius': 8 };
     collisions = new Array();
     for(f=0;f<fragments.length;f++) {
 	poly = new TaggedPoly("poly"+f, fragments[f], null);
@@ -284,21 +284,40 @@ function animate()
     intersectVertices(points, collisions, ball.x,ball.y,ball.dx,ball.dy, ball.radius,lastCollisionObjectID)
     closestDist = 1.1;
     closest = null;
-    console.log("X", "Y", "i", "Ang");
 
     for(c=0;c<collisions.length;c++) {
-        console.log(c.ix, c.iy, c.dist, c.outAngle);
-        if(c.dist < closestDist) {
-            closest = c;
-            closestDist = c.dist;
+	col = collisions[c];
+        console.log(col.ix, col.iy, col.dist, col.outAngle);
+        if(col.dist < closestDist) {
+            closest = col;
+            closestDist = col.dist;
 	}
     }
+    if(closest != null) {
+        console.log("Identified collision as one at dist "+closestDist);
+	ctx.beginPath();
+	ctx.moveTo(x,y);
+	x = closest.ix;
+        y = closest.iy;
+        dist = lineLen(dx,dy);
+        //distRemain = dist*(1.0-closest.dist);
+        dx = dist*Math.cos(closest.outAngle);
+        dy = dist*Math.sin(closest.outAngle);
+	console.log("Moving to "+x+","+y+" with vel "+dx+","+dy);
+//	stopRunloop=true;
+	ctx.lineTo(x,y);
+	ctx.stroke();
 
+    } else {
+	x += dx;
+	y += dy;
+    }
+    
 }
 
 function draw() {
     ctx.fillStyle = "#0000ff";
-    ctx.fillRect(0, 0, SCREENWIDTH, SCREENHEIGHT);
+    //ctx.fillRect(0, 0, SCREENWIDTH, SCREENHEIGHT);
 
     if(mode == MODE_TITLE) {
 	ctx.drawImage(titleBitmap, 0, 0);
@@ -308,20 +327,21 @@ function draw() {
     ctx.drawImage(playerImage, batx, 400);
     ctx.beginPath();
     ctx.arc(x, y, 8, 0, 2 * Math.PI, false);
-    ctx.fillStyle = 'white';
-    ctx.fill();
+    ctx.strokeStyle = 'white';
+    ctx.stroke();
 
     ctx.fillStyle = 'red';
 
     for(f=0;f<fragments.length;f++) {
 	poly = fragments[f];
 	ctx.beginPath();
-	ctx.moveTo(poly[0][0], poly[0][1]-100);
+	ctx.moveTo(poly[0][0], poly[0][1]);
 	for(p=1;p<poly.length;p++) {
 	    point = poly[p];
-	    ctx.lineTo(point[0], point[1]-100);
+	    ctx.lineTo(point[0], point[1]);
 	    }
-	ctx.fill()
+	ctx.closePath();
+	ctx.stroke()
 	}
 
     if(mode == MODE_WIN) {
@@ -348,6 +368,8 @@ function drawRepeat() {
 if (canvas.getContext('2d')) {
     stopRunloop = false;
     ctx = canvas.getContext('2d');
+    ctx.fillStyle = "#0000ff";
+    ctx.fillRect(0, 0, SCREENWIDTH, SCREENHEIGHT);
     body.onkeydown = function (event) {
 	var c = event.keyCode;
         keysDown[c] = 1;

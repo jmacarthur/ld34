@@ -45,9 +45,6 @@ def generatePoints():
         ycoords = randomInRange(miny,maxy,10)[1:-2]
         for y in ycoords: 
             points.append([x+random.random()*wobble-wobble/2,y])
-
-    # Now generate a hull so everything is inside...
-    points.extend([[ minx-100,miny-100],[maxx+100,miny-100], [minx-100, maxy+100], [maxx+100,maxy+100]])
     return np.array(points)
 
 def voronoi(points):
@@ -136,8 +133,21 @@ def dumpSvg(polys):
     f.write("</svg>\n")
     f.close()
 
+def dumpPoly(polys):
+    f = open("shattered.poly","w")
+    for poly in polys:
+        line = ""
+        for point in poly:
+            pointText = "%f,%f "%tuple(point)
+            line += pointText
+        f.write(line)
+        f.write("\n")
+    f.close()
+
+
 if __name__=="__main__":
     points = generatePoints()
     polygons = voronoi(points)
     f = clip(polygons)
     dumpSvg(f)
+    dumpPoly(f)

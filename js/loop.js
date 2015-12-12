@@ -52,6 +52,30 @@ function makeTitleBitmaps()
     bitfont.onload = paintTitleBitmaps;
 }
 
+function loadFragments()
+{
+    fragments = new Array();
+
+    request = new XMLHttpRequest();
+    request.open("GET", "resources/utah-teapot.shattered.poly",false); // Blocking, todo
+    request.send(null);
+    console.log(request.responseText);
+
+    lineArray = request.responseText.split("\n");
+    for(var l = 0;l< lineArray.length; l++) {
+	line = lineArray[l];
+	pointArray = line.split(" ");
+	poly = new Array();
+	for(var p=0;p < pointArray.length;p++) {
+	    point = pointArray[p];
+	    xy = point.split(",");
+	    poly.push([xy[0]/2, xy[1]/2.0]);
+	}
+	fragments.push(poly);
+    }
+}
+
+
 function resetGame()
 {
     batx = 128;
@@ -60,11 +84,8 @@ function resetGame()
     dx = -4;
     dy = 4;
 
-    fragments = [
-	[[500.000000,368.000000],[302.000000,414.000000],[235.000000,414.000000],[218.000000,388.000000],[243.000000,333.000000],[295.000000,333.000000]],
-	[[243.000000,433.000000],[218.000000,488.000000],[164.000000,487.000000],[159.000000,456.000000],[176.000000,415.000000],[227.000000,414.000000]],
-	[[204.000000,162.000000],[213.000000,184.000000],[205.000000,204.000000],[167.000000,203.000000],[201.000000,233.000000],[97.000000,168.000000],[145.000000,160.000000]]
-    ];
+
+    loadFragments();
 
 }
 

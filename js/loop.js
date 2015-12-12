@@ -69,9 +69,9 @@ function loadFragments()
 	for(var p=0;p < pointArray.length;p++) {
 	    point = pointArray[p];
 	    xy = point.split(",");
-	    poly.push([xy[0]/2, xy[1]/2.0]);
+	    poly.push([xy[0]/2, xy[1]/2]);
 	}
-	fragments.push(poly);
+	fragments.push(new TaggedPoly("poly"+l, poly, null));
     }
 }
 
@@ -81,8 +81,8 @@ function resetGame()
     batx = 128;
     x = 320;
     y = 128;
-    dx = -4;
-    dy = 4;
+    dx = -8;
+    dy = 8;
 
 
     loadFragments();
@@ -120,7 +120,7 @@ function TaggedPoly(ident, pointarray, region) {
     this.poly = pointarray;
     this.region = region;
     this.ident = ident;
-
+    this.alive = true;
 }
 
 function Collision(ix,iy,dist,outAngle,obj)
@@ -237,7 +237,7 @@ function intersectPoly(poly, collisions, ball, considerRadius, lastCollisionObje
         //if(poly.region.collide == False) {
         //    outangle = incident - Math.PI;
 	//}
-        collisions.push(new Collision(ball.x + lowi*ball.dx, ball.y+lowi*ball.dy, lowi, outangle,hitline));
+        collisions.push(new Collision(ball.x + lowi*ball.dx, ball.y+lowi*ball.dy, lowi, outangle,poly));
 	console.log("Intersection with polygon "+poly.ident+" line "+hitline.ident);
     }
     return collisions;
@@ -289,14 +289,14 @@ function animate()
     var ball = { 'x': x, 'y': y, 'dx': dx, 'dy': dy, 'radius': 16 };
     collisions = new Array();
     for(f=0;f<fragments.length;f++) {
-	poly = new TaggedPoly("poly"+f, fragments[f], null);
+	poly = fragments[f];
 	lastCollisionObjectID = "";
 	collisions = intersectPoly(poly, collisions, ball, 1, lastCollisionObjectID);
     }
 
     points = new Array();
     for(f=0;f<fragments.length;f++) {
-	poly = new TaggedPoly("poly"+f, fragments[f], null);
+	poly = fragments[f];
 	for(p=0;p<poly.poly.length;p++) {
 	    points.push(new TaggedPoint(poly.poly[p], poly, p));
 	}	
@@ -315,7 +315,7 @@ function animate()
 	}
     }
     if(closest != null) {
-        console.log("Identified collision as one at dist "+closestDist);
+        console.log("Identified collision as "+closest.obj.ident+" at dist "+closestDist);
 	ctx.beginPath();
 	ctx.moveTo(x,y);
 	x = closest.ix;
@@ -328,7 +328,7 @@ function animate()
 	// TODO: At the moment we only do one collision per check - we could get into trouble this way...
 	ctx.lineTo(x,y);
 	ctx.stroke();
-
+	closest.obj.alive = false;
     } else {
 	x += dx;
 	y += dy;
@@ -354,13 +354,14 @@ function draw() {
     ctx.fillStyle = 'red';
 
     for(f=0;f<fragments.length;f++) {
-	poly = fragments[f];
+	if(fragments[f].alive == false) continue;
+	poly = fragments[f].poly;
 	ctx.beginPath();
 	ctx.moveTo(poly[0][0], poly[0][1]);
 	for(p=1;p<poly.length;p++) {
 	    point = poly[p];
 	    ctx.lineTo(point[0], point[1]);
-	    }
+	}
 	ctx.closePath();
 	ctx.stroke()
 	}

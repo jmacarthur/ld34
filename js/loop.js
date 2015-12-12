@@ -54,8 +54,18 @@ function makeTitleBitmaps()
 
 function resetGame()
 {
-    x = 128;
+    batx = 128;
+    x = 320;
     y = 128;
+    dx = 4;
+    dy = 4;
+
+    fragments = [
+	[[316.000000,468.000000],[302.000000,514.000000],[235.000000,514.000000],[218.000000,488.000000],[243.000000,433.000000],[295.000000,433.000000]],
+	[[243.000000,433.000000],[218.000000,488.000000],[164.000000,487.000000],[159.000000,456.000000],[176.000000,415.000000],[227.000000,414.000000]],
+	[[204.000000,362.000000],[213.000000,384.000000],[205.000000,404.000000],[167.000000,403.000000],[201.000000,433.000000],[97.000000,368.000000],[145.000000,360.000000]]
+    ];
+
 }
 
 function init()
@@ -67,6 +77,14 @@ function init()
     return true;
 }
 
+function animate()
+{
+    x += dx;
+    y += dy;
+    if(x > SCREENWIDTH || x<0)  dx = -dx;
+    if(y > SCREENHEIGHT || y<0)  dy = -dy;
+}
+
 function draw() {
     ctx.fillStyle = "#0000ff";
     ctx.fillRect(0, 0, SCREENWIDTH, SCREENHEIGHT);
@@ -76,7 +94,24 @@ function draw() {
 	return;
     }
 
-    ctx.drawImage(playerImage, x, y);
+    ctx.drawImage(playerImage, batx, 400);
+    ctx.beginPath();
+    ctx.arc(x, y, 8, 0, 2 * Math.PI, false);
+    ctx.fillStyle = 'white';
+    ctx.fill();
+
+    ctx.fillStyle = 'red';
+
+    for(f=0;f<fragments.length;f++) {
+	poly = fragments[f];
+	ctx.beginPath();
+	ctx.moveTo(poly[0][0], poly[0][1]-100);
+	for(p=1;p<poly.length;p++) {
+	    point = poly[p];
+	    ctx.lineTo(point[0], point[1]-100);
+	    }
+	ctx.fill()
+	}
 
     if(mode == MODE_WIN) {
 	ctx.drawImage(winBitmap, 0, 0);
@@ -84,19 +119,16 @@ function draw() {
 }
 
 function processKeys() {
-    if(keysDown[40] || keysDown[83]) y += 4;
-    if(keysDown[38] || keysDown[87]) y -= 4;
-    if(keysDown[37] || keysDown[65]) x -= 4;
-    if(keysDown[39] || keysDown[68]) x += 4;
-    if(x < 0) x = 0;
-    if(x > SCREENWIDTH - playerImage.width)  x = SCREENHEIGHT - playerImage.width;
-    if(y < 0) y = 0;
-    if(y > SCREENWIDTH - playerImage.height) y = SCREENHEIGHT - playerImage.height;
+    if(keysDown[37] || keysDown[65]) batx -= 8;
+    if(keysDown[39] || keysDown[68]) batx += 8;
+    if(batx < 0) batx = 0;
+    if(batx > SCREENWIDTH - playerImage.width)  batx = SCREENWIDTH - playerImage.width;
 }
 
 function drawRepeat() {
     if(mode != MODE_TITLE) {
 	processKeys();
+	animate();
     }
     draw();
     if(!stopRunloop) setTimeout('drawRepeat()',20);

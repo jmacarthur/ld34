@@ -63,7 +63,7 @@ function resetGame()
     fragments = [
 	[[500.000000,368.000000],[302.000000,414.000000],[235.000000,414.000000],[218.000000,388.000000],[243.000000,333.000000],[295.000000,333.000000]],
 	[[243.000000,433.000000],[218.000000,488.000000],[164.000000,487.000000],[159.000000,456.000000],[176.000000,415.000000],[227.000000,414.000000]],
-	[[204.000000,362.000000],[213.000000,384.000000],[205.000000,404.000000],[167.000000,403.000000],[201.000000,433.000000],[97.000000,368.000000],[145.000000,360.000000]]
+	[[204.000000,162.000000],[213.000000,184.000000],[205.000000,204.000000],[167.000000,203.000000],[201.000000,233.000000],[97.000000,168.000000],[145.000000,160.000000]]
     ];
 
 }
@@ -71,7 +71,7 @@ function resetGame()
 function init()
 {
     mode = MODE_TITLE;
-    playerImage = getImage("player");
+    playerImage = getImage("skateboard");
     springSound = new Audio("audio/boing.wav");
     makeTitleBitmaps();
     return true;
@@ -117,6 +117,7 @@ function getTaggedPolyLines(taggedPolygon)
     for(p=0;p<poly.length-1;p++) {
         lines.push(new TaggedLine(poly[p][0],poly[p][1],poly[p+1][0],poly[p+1][1],taggedPolygon,p));
     }
+    lines.push(new TaggedLine(poly[0][0],poly[0][1],poly[poly.length-1][0],poly[poly.length-1][1],taggedPolygon,p));
     return lines;
 }
 
@@ -239,7 +240,6 @@ function intersectVertices(points, collisions, ballx,bally,ballxv,ballyv, ballRa
         res = checkClosestApproach(p,ballx,bally,ballxv,ballyv);
 
 	d = res[0]; i = res[1];
-        console.log("Closest approach to "+p.ident+" is "+d);
         if(d<ballRadius) {
             diff = ballRadius - d;
             dist = Math.sqrt(ballRadius*ballRadius-d*d);
@@ -265,7 +265,7 @@ function animate()
 {
     if(x > SCREENWIDTH || x<0)  dx = -dx;
     if(y > SCREENHEIGHT || y<0)  dy = -dy;
-    var ball = { 'x': x, 'y': y, 'dx': dx, 'dy': dy, 'radius': 8 };
+    var ball = { 'x': x, 'y': y, 'dx': dx, 'dy': dy, 'radius': 16 };
     collisions = new Array();
     for(f=0;f<fragments.length;f++) {
 	poly = new TaggedPoly("poly"+f, fragments[f], null);
@@ -304,7 +304,7 @@ function animate()
         dx = dist*Math.cos(closest.outAngle);
         dy = dist*Math.sin(closest.outAngle);
 	console.log("Moving to "+x+","+y+" with vel "+dx+","+dy);
-//	stopRunloop=true;
+	// TODO: At the moment we only do one collision per check - we could get into trouble this way...
 	ctx.lineTo(x,y);
 	ctx.stroke();
 
@@ -317,16 +317,16 @@ function animate()
 
 function draw() {
     ctx.fillStyle = "#0000ff";
-    //ctx.fillRect(0, 0, SCREENWIDTH, SCREENHEIGHT);
+    ctx.fillRect(0, 0, SCREENWIDTH, SCREENHEIGHT);
 
     if(mode == MODE_TITLE) {
 	ctx.drawImage(titleBitmap, 0, 0);
 	return;
     }
 
-    ctx.drawImage(playerImage, batx, 400);
+    ctx.drawImage(playerImage, batx, 450);
     ctx.beginPath();
-    ctx.arc(x, y, 8, 0, 2 * Math.PI, false);
+    ctx.arc(x, y, 16, 0, 2 * Math.PI, false);
     ctx.strokeStyle = 'white';
     ctx.stroke();
 

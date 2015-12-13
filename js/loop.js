@@ -45,6 +45,11 @@ function makeBitmaps()
     makePriceBitmap();
 }
 
+function randint(n)
+{
+    return Math.floor(Math.random()*n);
+}
+
 function loadComplete(n)
 {
     console.log("Resource loaded: "+n);
@@ -180,6 +185,7 @@ function loadFragments()
 
 function resetGame()
 {
+    looseFragments = new Array();
     frameCounter = 0;
     lives = 3;
     scrollOn = 480;
@@ -236,6 +242,12 @@ function init()
     wallSound = new Audio("audio/wall.wav");
     winSound = new Audio("audio/win.wav");
     batSound = new Audio("audio/bat.wav");
+
+    smashNoise = new Array();
+    for(n=0;n<5;n++) {
+	smashNoise[n] = new Audio("audio/smash"+n+".wav");
+    }
+
     makeTitleBitmaps();
     makePriceBitmap();
     frameCounter = 0;
@@ -243,6 +255,25 @@ function init()
     stage = 0;
     cheatMode = false;
     return true;
+}
+
+function LooseFragment(polygon)
+{
+    var xtotal = 0;
+    var ytotal = 0;
+    for(var i=0;i<polygon.length;i++) {
+	xtotal += polygon[i][0];
+	ytotal += polygon[i][1];
+    }
+    this.xoffset = xtotal/polygon.length;
+    this.yoffset = ytotal/polygon.length;
+    this.x = 0;
+    this.y = 0;
+    this.dy = 3;
+    this.dx = Math.random()*8-4;
+    this.poly = polygon;
+    this.rot = 0;
+    this.angVel = 0.5*(Math.random()-0.5);
 }
 
 function TaggedPoint(coords, polygon, pointid)
@@ -532,6 +563,9 @@ function animate()
 	ctx.stroke();
 	if (shattered) {
 	    closest.obj.alive = false;
+	    looseFragments.push(new LooseFragment(closest.obj.poly));
+	    console.log("Loose fragments: "+looseFragments.length);
+
 	    score += 2;
 	    totalFragments -= 1;
 	    if(totalFragments <= 1) {
@@ -539,11 +573,12 @@ function animate()
 		winTimeout = 100;
 		winSound.play();
 	    }
+	    smashNoise[2+randint(3)].play();
 	    console.log("Fragments remaining: "+totalFragments);
 	} else {
 	    shattered = true;
+	    smashNoise[randint(2)].play();
 	    }
-	hitSound.play()
     } else {
 	x += dx;
 	y += dy;
@@ -561,6 +596,17 @@ function animate()
 	    nextLevel();
 	}
     }
+    var tempArray = new Array();
+    for(var i=0;i<looseFragments.length;i++) {
+	looseFragments[i].y += looseFragments[i].dy;
+	looseFragments[i].x += looseFragments[i].dx;
+	looseFragments[i].dy *= 1.1;
+	looseFragments[i].rot += looseFragments[i].angVel;
+	if(looseFragments[i].y < 640)
+	    tempArray.push(looseFragments[i])
+    }
+    looseFragments = tempArray;
+    // Cull old loose fragments
 }
 
 function drawFragments()
@@ -583,6 +629,30 @@ function drawFragments()
 	}
 
 
+}
+
+function drawLooseFragments()
+{
+    for(var i=0;i<looseFragments.length;i++) {
+	f = looseFragments[i];
+	poly = f.poly;
+	ctx.fillStyle = colours[i];
+	ctx.strokeStyle = "#000000";
+	ctx.save();
+	ctx.translate(f.xoffset+f.x, f.yoffset+f.y);
+	ctx.rotate(f.rot);
+	ctx.translate(-f.xoffset, -f.yoffset);
+	ctx.beginPath();
+	ctx.moveTo(poly[0][0], poly[0][1]);
+	for(p=1;p<poly.length;p++) {
+	    point = poly[p];
+	    ctx.lineTo(point[0], point[1]);
+	}
+	ctx.closePath();
+	ctx.fill();
+	ctx.stroke();
+	ctx.restore();
+    }
 }
 
 function drawOutline()
@@ -664,7 +734,7 @@ function draw() {
     } else {
 	drawOutline();
     }
-
+    drawLooseFragments();
     if(mode == MODE_WIN) {
 	ctx.drawImage(winBitmap, 0, 0);
     }

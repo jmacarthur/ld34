@@ -69,7 +69,8 @@ function loadFragments()
 	for(var p=0;p < pointArray.length;p++) {
 	    point = pointArray[p];
 	    xy = point.split(",");
-	    poly.push([xy[0]/2+100, xy[1]/2-50]); // Hax
+	    // polygons are specified on a 1-1000 scale.
+	    poly.push([(xy[0]-500)/2+320, xy[1]/2]); 
 	}
 	fragments.push(new TaggedPoly("poly"+l, poly, null));
 	col = "#"

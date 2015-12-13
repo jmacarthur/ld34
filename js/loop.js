@@ -412,7 +412,7 @@ function animate()
 	scrollOn = 0;
 	}
     if(x > SCREENWIDTH || x<0) { dx = -dx; wallSound.play(); }
-    if(y > SCREENHEIGHT || y<0) { dy = -dy; wallSound.play(); }
+    if(y > SCREENHEIGHT || y<0) { dy = -dy; if(gameOverTimeout==0) wallSound.play(); }
 
     if(launchTimeout > 0) {
 	launchTimeout -= 1;

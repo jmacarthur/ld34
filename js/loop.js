@@ -37,6 +37,12 @@ function paintTitleBitmaps()
     drawString(winctx, 'Your game should always have an ending',32,32);
 }
 
+function makeBitmaps()
+{
+    paintTitleBitmaps();
+    makePriceBitmap();
+}
+
 function makeTitleBitmaps()
 {
     titleBitmap = document.createElement('canvas');
@@ -49,7 +55,28 @@ function makeTitleBitmaps()
     winctx = winBitmap.getContext('2d');
     bitfont = new Image();
     bitfont.src = "graphics/bitfont.png";
-    bitfont.onload = paintTitleBitmaps;
+    bitfont.onload = makeBitmaps;
+}
+
+function makePriceBitmap()
+{
+    priceBitmap = document.createElement('canvas');
+    priceBitmap.width = 64;
+    priceBitmap.height = 32;
+    pricectx = priceBitmap.getContext('2d');
+    pricectx.moveTo(0,16);
+    pricectx.lineTo(16,30);
+    pricectx.lineTo(64,30);
+    pricectx.lineTo(64,2);
+    pricectx.lineTo(16,2);
+    pricectx.fillStyle="#ff8000";
+    pricectx.strokeStyle="#804000";
+    pricectx.lineWidth=4;
+    pricectx.closePath();
+    pricectx.fill();
+    pricectx.stroke();   
+    drawString(pricectx, "$200", 14,8);
+    console.log("Created price bitmap");
 }
 
 function loadPolygon(line)
@@ -93,7 +120,6 @@ function loadFragments()
 	bcol += (r).toString(16)+(g).toString(16)+(b).toString(16);
 	colours.push(col);
 	borderColours.push(bcol);
-	console.log("Colour "+l+": "+col);
     }
 
     request = new XMLHttpRequest();
@@ -111,6 +137,7 @@ function loadFragments()
 
 function resetGame()
 {
+    frameCounter = 0;
     batx = 128;
     baty = 450;
     x = batx;
@@ -122,6 +149,7 @@ function resetGame()
     loadFragments();
     launchTimeout = 80;
     launchDir = 1; // Right
+    tagOffset = 0;
 }
 
 function init()
@@ -133,6 +161,9 @@ function init()
     titleImage = getImage("title");
     springSound = new Audio("audio/boing.wav");
     makeTitleBitmaps();
+    makePriceBitmap();
+    frameCounter = 0;
+    tagOffset = 0;
     return true;
 }
 
@@ -418,7 +449,7 @@ function drawFragments()
 	if(fragments[f].alive == false) continue;
 	poly = fragments[f].poly;
 	ctx.fillStyle = colours[f];
-	ctx.strokeStyle = borderColours[f];
+	ctx.strokeStyle = "#000000";
 	ctx.beginPath();
 	ctx.moveTo(poly[0][0], poly[0][1]);
 	for(p=1;p<poly.length;p++) {
@@ -438,6 +469,7 @@ function drawOutline()
     
     ctx.fillStyle = 'white';
     ctx.beginPath();
+    ctx.strokeWidth=4;
     for(f=0;f<outline.length;f++) {
 	poly = outline[f].poly;
 	ctx.moveTo(poly[0][0], poly[0][1]-scrollOn);
@@ -452,7 +484,7 @@ function drawOutline()
 
 function draw() {
     ctx.drawImage(backgroundImage, 0,0);
-
+    frameCounter += 1;
     if(mode == MODE_TITLE) {
 	ctx.drawImage(titleBitmap, 0, 0);
 	return;
@@ -503,6 +535,26 @@ function draw() {
 
     if(mode == MODE_WIN) {
 	ctx.drawImage(winBitmap, 0, 0);
+    }
+
+    // Price tag
+    if(!shattered) {
+	tagAngle = radians(90)+Math.sin(frameCounter/8);
+    } else {
+	tagOffset += 4;
+	tagOffset *= 1.2;
+    }
+    if(tagOffset < 600) {
+	ctx.save()
+	ctx.lineWidth=2;
+	ctx.strokeStyle="#000000";
+	ctx.translate(400,300+tagOffset);
+	ctx.rotate(tagAngle);
+	ctx.moveTo(0,0);
+	ctx.lineTo(64,0);
+	ctx.stroke();
+	ctx.drawImage(priceBitmap, 64, -16);
+	ctx.restore();
     }
 }
 

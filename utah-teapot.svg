@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="1000"
+   height="1000"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.48.4 r9939"
+   sodipodi:docname="utah-teapot.svg">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.35"
+     inkscape:cx="375"
+     inkscape:cy="468.43503"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1088"
+     inkscape:window-height="634"
+     inkscape:window-x="0"
+     inkscape:window-y="24"
+     inkscape:window-maximized="0" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-52.362183)">
+    <path
+       style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 265.71429,222.36218 25.71429,-7.14285 115.71428,-21.42858 27.14286,-18.57142 -7.14286,-97.14286 94.28572,0 -12.85715,94.28571 32.85715,20 151.42857,28.57143 8.57143,34.28572 90,-14.28572 138.57142,4.28572 24.28572,25.71428 15.71428,20 5.71429,21.42857 -2.85714,40 -21.42857,55.71429 -40,64.28571 -130,130 -12.85715,-2.85714 -1.42857,15.71429 -44.28571,58.57142 0,24.28572 -94.28572,12.85714 L 360,712.36218 237.14286,700.93361 228.57143,673.79075 197.14286,640.93361 161.42858,583.79075 164.28572,559.50504 125.71429,482.36218 88.571429,340.93361 74.285715,293.79075 40,256.6479 l -14.285714,-5.71429 20,-17.14286 61.428574,0 91.42857,120 47.14286,-114.28571 z"
+       id="path2996"
+       inkscape:connector-curvature="0" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 735.71429,318.07647 58.57143,185.71428 1.42857,27.14286 61.42857,-55.71428 L 910,400.93361 932.85715,355.21933 930,303.79075 904.28572,286.6479 812.85715,283.79075 z"
+       id="path2998"
+       inkscape:connector-curvature="0" />
+  </g>
+</svg>

@@ -58,7 +58,7 @@ function loadFragments()
     colours = new Array();
     
     request = new XMLHttpRequest();
-    request.open("GET", "resources/utah-teapot.shattered.poly",false); // Blocking, todo
+    request.open("GET", "resources/teapot.shattered.poly",false); // Blocking, todo
     request.send(null);
 
     lineArray = request.responseText.split("\n");

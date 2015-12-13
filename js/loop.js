@@ -113,13 +113,15 @@ function resetGame()
 {
     batx = 128;
     baty = 450;
-    x = 320;
+    x = batx;
     y = baty;
     dx = -8;
     dy = -8;
+    scrollOn = 480;
     shattered = false;
     loadFragments();
-
+    launchTimeout = 80;
+    launchDir = 1; // Right
 }
 
 function init()
@@ -326,8 +328,21 @@ function intersectVertices(points, collisions, ballx,bally,ballxv,ballyv, ballRa
 
 function animate()
 {
+    if(scrollOn >1) {
+	scrollOn *= 0.7;
+	}
+    else {
+	scrollOn = 0;
+	}
     if(x > SCREENWIDTH || x<0)  dx = -dx;
     if(y > SCREENHEIGHT || y<0)  dy = -dy;
+
+    if(launchTimeout > 0) {
+	launchTimeout -= 1;
+	x = batx+playerImage.width/2;
+	dx = launchDir*8;
+	y = baty;
+    }
     var ball = { 'x': x, 'y': y, 'dx': dx, 'dy': dy, 'radius': 16 };
     collisions = new Array();
     closest = null;
@@ -420,20 +435,19 @@ function drawFragments()
 
 function drawOutline()
 {
+    
     ctx.fillStyle = 'white';
     ctx.beginPath();
     for(f=0;f<outline.length;f++) {
 	poly = outline[f].poly;
-	ctx.moveTo(poly[0][0], poly[0][1]);
+	ctx.moveTo(poly[0][0], poly[0][1]-scrollOn);
 	for(p=1;p<poly.length;p++) {
 	    point = poly[p];
-	    ctx.lineTo(point[0], point[1]);
+	    ctx.lineTo(point[0], point[1]-scrollOn);
 	}
     }
     ctx.closePath();
     ctx.fill();
-
-
 }
 
 function draw() {
@@ -455,10 +469,29 @@ function draw() {
     ctx.fill();
     ctx.save();
     ctx.translate(x,y);
-    angle = Math.atan2(dy, dx);
+    if(launchTimeout > 0)
+	angle = 0;
+    else
+	angle = Math.atan2(dy, dx);
     ctx.rotate(angle);
     ctx.drawImage(bullImage, -16, -16, 32,32);
     ctx.restore();
+
+    if(launchTimeout > 0)
+    {
+	ctx.lineWidth = 5;
+	ctx.beginPath();
+
+	ctx.arc(x, y, launchTimeout+16, 0, 2 * Math.PI, false);
+	ctx.strokeStyle = 'rgba(0,255,0,0.5)';
+	ctx.stroke();	
+	ctx.lineWidth = 1;
+	ctx.beginPath();
+	ctx.moveTo(x+launchDir*16,y-32);
+	ctx.lineTo(x+launchDir*32,y-32);
+	ctx.lineTo(x+launchDir*32,y-16);
+	ctx.fill();
+    }
 
     ctx.fillStyle = 'red';
 
@@ -474,8 +507,8 @@ function draw() {
 }
 
 function processKeys() {
-    if(keysDown[37] || keysDown[65]) batx -= 8;
-    if(keysDown[39] || keysDown[68]) batx += 8;
+    if(keysDown[37] || keysDown[65]) { batx -= 8; launchDir = -1; }
+    if(keysDown[39] || keysDown[68]) { batx += 8; launchDir = 1; }
     if(batx < 0) batx = 0;
     if(batx > SCREENWIDTH - playerImage.width)  batx = SCREENWIDTH - playerImage.width;
 }

@@ -138,15 +138,22 @@ function loadFragments()
 function resetGame()
 {
     frameCounter = 0;
+    lives = 3;
+    scrollOn = 480;
+    shattered = false;
+    loadFragments();
+    resetLife();
+    gameOverTimeout = 0;
+}
+
+function resetLife()
+{
     batx = 128;
     baty = 450;
     x = batx;
     y = baty;
     dx = -8;
     dy = -8;
-    scrollOn = 480;
-    shattered = false;
-    loadFragments();
     launchTimeout = 80;
     launchDir = 1; // Right
     tagOffset = 0;
@@ -383,7 +390,15 @@ function animate()
 	    dy = -Math.abs(dy);
 	}
 	if(y>470) {
-	    resetGame();
+	    lives -= 1;
+	    if(lives <= 0) {
+		// Hacked game end mode
+		gameOverTimeout = 100;
+		y = 1000;
+		dy = 0;
+		return;
+	    }
+	    resetLife();
 	}
     }
     else
@@ -439,7 +454,12 @@ function animate()
 	x += dx;
 	y += dy;
     }
-    
+    if(gameOverTimeout > 0) {
+	gameOverTimeout -= 1;
+	if(gameOverTimeout ==0) {
+	    mode = MODE_TITLE;
+	}
+    }
 }
 
 function drawFragments()
@@ -556,6 +576,19 @@ function draw() {
 	ctx.drawImage(priceBitmap, 64, -16);
 	ctx.restore();
     }
+
+    for(i=1;i<lives;i++) {
+	ctx.beginPath();
+	ctx.arc(SCREENWIDTH-60*i+24, 8+24, 24, 0, 2 * Math.PI, false);
+	ctx.fillStyle = 'rgba(255,255,0,0.5)';
+	ctx.fill();
+	ctx.drawImage(bullImage, SCREENWIDTH-60*i, 8, 48,48);
+    }
+
+    if(gameOverTimeout > 0) {
+	drawString(ctx, "GAME OVER", 320-14*4.5, 400);
+    }
+
 }
 
 function processKeys() {

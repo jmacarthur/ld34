@@ -287,9 +287,10 @@ function intersectVertices(points, collisions, ballx,bally,ballxv,ballyv, ballRa
                 console.log("Collides with ident "+p.ident+" Incident angle = "+degrees(incident));
                 console.log("Surface normal angle = "+degrees(radiusAng));
                 outangle = radiusAng - angle;
-                //if(p.polygon.region.collide == False):
-                //outangle = incident-Math.PI
-                collisions.push(new Collision(ix,iy, iPoint, outangle, p))
+		// Horrible way to get the polygon of this point by parsing the ident...
+		split = p.ident.indexOf("-");
+		polyNum = p.ident.slice(4,split);
+                collisions.push(new Collision(ix,iy, iPoint, outangle, fragments[polyNum]))
 	    }
 	}
     }

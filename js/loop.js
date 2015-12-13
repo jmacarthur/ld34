@@ -33,7 +33,7 @@ function drawString(context, string, x, y) {
 
 function paintTitleBitmaps()
 {
-    drawString(titlectx, 'This is a demo of the JavaScript/HTML5 game loop',32,32);
+    titlectx.drawImage(titleImage, 0, 0);
     drawString(winctx, 'Your game should always have an ending',32,32);
 }
 
@@ -99,6 +99,8 @@ function init()
     mode = MODE_TITLE;
     playerImage = getImage("skateboard");
     bullImage = getImage("bull");
+    backgroundImage = getImage("chinashop-640");
+    titleImage = getImage("title");
     springSound = new Audio("audio/boing.wav");
     makeTitleBitmaps();
     return true;
@@ -362,8 +364,7 @@ function animate()
 }
 
 function draw() {
-    ctx.fillStyle = "#0000ff";
-    ctx.fillRect(0, 0, SCREENWIDTH, SCREENHEIGHT);
+    ctx.drawImage(backgroundImage, 0,0);
 
     if(mode == MODE_TITLE) {
 	ctx.drawImage(titleBitmap, 0, 0);
@@ -373,11 +374,11 @@ function draw() {
     ctx.drawImage(playerImage, batx, baty);
     ctx.beginPath();
     ctx.arc(x, y, 20, 0, 2 * Math.PI, false);
-    ctx.fillStyle = 'rgba(255,0,255,0.5)';
+    ctx.fillStyle = 'rgba(255,255,0,0.5)';
     ctx.fill();
     ctx.beginPath();
     ctx.arc(x, y, 16, 0, 2 * Math.PI, false);
-    ctx.fillStyle = 'rgba(255,0,255,1.0)';
+    ctx.fillStyle = 'rgba(255,255,0,1.0)';
     ctx.fill();
     ctx.save();
     ctx.translate(x,y);

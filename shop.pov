@@ -51,3 +51,14 @@ box {  <1.5,0,1>,<3.1,1,1.75> texture { DMFWood3  scale 1 } }
 // Display box
 
 box { <0,0,-3>, <0.5, 1.7, 3> texture {DMFWood3 scale 1} }
+
+
+// Sign
+
+box { <0.2,2,2.9>, <2.8,2.5,3.0>
+    pigment {
+    image_map{    png "shop-sign.png"} 
+    scale <2.6,0.5,1>
+    translate <0.2,0,0>
+    }
+}

@@ -52,32 +52,59 @@ function makeTitleBitmaps()
     bitfont.onload = paintTitleBitmaps;
 }
 
+function loadPolygon(line)
+{
+    poly = new Array();
+    
+    pointArray = line.split(" ");
+    for(var p=0;p < pointArray.length;p++) {
+	point = pointArray[p];
+	xy = point.split(",");
+	// polygons are specified on a 1-1000 scale.
+	poly.push([(xy[0]-500)/2+320, xy[1]/2]); 
+    }
+    return poly;
+}
+
 function loadFragments()
 {
     fragments = new Array();
+    outline = new Array();
     colours = new Array();
+    borderColours = new Array();
+
+    shape = "teapot";
     
     request = new XMLHttpRequest();
-    request.open("GET", "resources/teapot.shattered.poly",false); // Blocking, todo
+    request.open("GET", "resources/"+shape+".shattered.poly",false); // Blocking, todo
     request.send(null);
 
     lineArray = request.responseText.split("\n");
     for(var l = 0;l< lineArray.length; l++) {
 	line = lineArray[l];
-	pointArray = line.split(" ");
-	poly = new Array();
-	for(var p=0;p < pointArray.length;p++) {
-	    point = pointArray[p];
-	    xy = point.split(",");
-	    // polygons are specified on a 1-1000 scale.
-	    poly.push([(xy[0]-500)/2+320, xy[1]/2]); 
-	}
+	poly = loadPolygon(line)
 	fragments.push(new TaggedPoly("poly"+l, poly, null));
 	col = "#"
-	for(var i=0;i<3;i++)
-	    col += (Math.floor(Math.random()*127)+127).toString(16);
+	bcol = "#"
+	r = Math.floor(Math.random()*64);
+	g = Math.floor(Math.random()*64);
+	b = Math.floor(Math.random()*64);
+	col += (r+191).toString(16)+(g+192).toString(16)+(b+191).toString(16);
+	bcol += (r).toString(16)+(g).toString(16)+(b).toString(16);
 	colours.push(col);
+	borderColours.push(bcol);
 	console.log("Colour "+l+": "+col);
+    }
+
+    request = new XMLHttpRequest();
+    request.open("GET", "resources/"+shape+".poly",false); // Blocking, todo
+    request.send(null);
+
+    lineArray = request.responseText.split("\n");
+    for(var l = 0;l< lineArray.length; l++) {
+	line = lineArray[l];
+	poly = loadPolygon(line);
+	outline.push(new TaggedPoly("outline"+l, poly, null));
     }
 }
 
@@ -90,7 +117,7 @@ function resetGame()
     y = baty;
     dx = -8;
     dy = -8;
-
+    shattered = false;
     loadFragments();
 
 }
@@ -357,12 +384,56 @@ function animate()
 	// TODO: At the moment we only do one collision per check - we could get into trouble this way...
 	ctx.lineTo(x,y);
 	ctx.stroke();
-	closest.obj.alive = false;
+	if (shattered) {
+	    closest.obj.alive = false;
+	} else {
+	    shattered = true;
+	    }
     } else {
 	x += dx;
 	y += dy;
     }
     
+}
+
+function drawFragments()
+{
+
+    for(f=0;f<fragments.length;f++) {
+	if(fragments[f].alive == false) continue;
+	poly = fragments[f].poly;
+	ctx.fillStyle = colours[f];
+	ctx.strokeStyle = borderColours[f];
+	ctx.beginPath();
+	ctx.moveTo(poly[0][0], poly[0][1]);
+	for(p=1;p<poly.length;p++) {
+	    point = poly[p];
+	    ctx.lineTo(point[0], point[1]);
+	}
+	ctx.closePath();
+	ctx.fill();
+	ctx.stroke();
+	}
+
+
+}
+
+function drawOutline()
+{
+    ctx.fillStyle = 'white';
+    ctx.beginPath();
+    for(f=0;f<outline.length;f++) {
+	poly = outline[f].poly;
+	ctx.moveTo(poly[0][0], poly[0][1]);
+	for(p=1;p<poly.length;p++) {
+	    point = poly[p];
+	    ctx.lineTo(point[0], point[1]);
+	}
+    }
+    ctx.closePath();
+    ctx.fill();
+
+
 }
 
 function draw() {
@@ -391,19 +462,11 @@ function draw() {
 
     ctx.fillStyle = 'red';
 
-    for(f=0;f<fragments.length;f++) {
-	if(fragments[f].alive == false) continue;
-	poly = fragments[f].poly;
-	ctx.fillStyle = colours[f];
-	ctx.beginPath();
-	ctx.moveTo(poly[0][0], poly[0][1]);
-	for(p=1;p<poly.length;p++) {
-	    point = poly[p];
-	    ctx.lineTo(point[0], point[1]);
-	}
-	ctx.closePath();
-	ctx.fill()
-	}
+    if (shattered) {
+	drawFragments(); 
+    } else {
+	drawOutline();
+    }
 
     if(mode == MODE_WIN) {
 	ctx.drawImage(winBitmap, 0, 0);

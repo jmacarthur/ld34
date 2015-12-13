@@ -55,6 +55,7 @@ def voronoi(points):
     for r in vor.regions:
         points = []
         for i in r:
+            if i == -1: continue
             points.append(vor.vertices[i])
         polygons.append(points)
     return polygons

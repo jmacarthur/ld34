@@ -4,14 +4,16 @@ var body = document.getElementsByTagName('body')[0];
 var keysDown = new Array();
 var SCREENWIDTH  = 640;
 var SCREENHEIGHT = 480;
+var MODE_LOADING = -1;
 var MODE_TITLE = 0;
 var MODE_PLAY  = 1;
 var MODE_WIN   = 2;
 
-function getImage(name)
+function getImage(name, resourceno)
 {
     image = new Image();
     image.src = 'graphics/'+name+'.png';
+    image.onload = makeLoadListener(resourceno);
     return image;
 }
 
@@ -43,6 +45,41 @@ function makeBitmaps()
     makePriceBitmap();
 }
 
+function loadComplete(n)
+{
+    console.log("Resource loaded: "+n);
+    loaded[n] = 1;
+    for(i=0;i<MAX_RESOURCE;i++) {
+	if(loaded[i] == null) {
+	    console.log("Still missing resource: "+i);
+	    return;
+	}
+    }
+    console.log("All resources loaded.");
+    makeBitmaps();
+    if(mode == MODE_LOADING) {
+	drawRepeat();
+    }
+    mode = MODE_TITLE;
+}
+
+function makeLoadListener(n)
+{
+    return function() {
+	loadComplete(n);
+    }
+}
+
+function loadBitmaps()
+{
+    MAX_RESOURCE=4;
+    bitfont = getImage("bitfont",0);
+    playerImage = getImage("skateboard",1);
+    bullImage = getImage("bull",2);
+    backgroundImage = getImage("chinashop-640",3);
+    titleImage = getImage("title",4);
+}
+
 function makeTitleBitmaps()
 {
     titleBitmap = document.createElement('canvas');
@@ -53,9 +90,6 @@ function makeTitleBitmaps()
     winBitmap.width = SCREENWIDTH;
     winBitmap.height = SCREENHEIGHT;
     winctx = winBitmap.getContext('2d');
-    bitfont = new Image();
-    bitfont.src = "graphics/bitfont.png";
-    bitfont.onload = makeBitmaps;
 }
 
 function makePriceBitmap()
@@ -195,11 +229,8 @@ function resetLife()
 
 function init()
 {
-    mode = MODE_TITLE;
-    playerImage = getImage("skateboard");
-    bullImage = getImage("bull");
-    backgroundImage = getImage("chinashop-640");
-    titleImage = getImage("title");
+    loaded = new Array();
+    loadBitmaps();
     hitSound = new Audio("audio/blip.wav");
     startSound = new Audio("audio/start.wav");
     wallSound = new Audio("audio/wall.wav");
@@ -573,6 +604,7 @@ function drawOutline()
 }
 
 function draw() {
+    if(mode== MODE_LOADING) return;
     ctx.drawImage(backgroundImage, 0,0);
     frameCounter += 1;
     if(mode == MODE_TITLE) {
@@ -682,7 +714,7 @@ function processKeys() {
 }
 
 function drawRepeat() {
-    if(mode != MODE_TITLE) {
+    if(mode > MODE_TITLE) {
 	processKeys();
 	animate();
     }
@@ -691,10 +723,9 @@ function drawRepeat() {
 }
 
 if (canvas.getContext('2d')) {
+    mode = MODE_LOADING;
     stopRunloop = false;
     ctx = canvas.getContext('2d');
-    ctx.fillStyle = "#0000ff";
-    ctx.fillRect(0, 0, SCREENWIDTH, SCREENHEIGHT);
     body.onkeydown = function (event) {
 	var c = event.keyCode;
         keysDown[c] = 1;
@@ -724,7 +755,5 @@ if (canvas.getContext('2d')) {
         keysDown[c] = 0;
     };
 
-    if(init()) {      
-      drawRepeat();
-    }
+    init();
 }

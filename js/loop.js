@@ -82,13 +82,14 @@ function makePriceBitmap()
 function loadPolygon(line)
 {
     poly = new Array();
-    
+    scale = 0.5;
+    if(shape == "vase") scale = 1/2.5; // Nasty hack because the vase is too big
     pointArray = line.split(" ");
     for(var p=0;p < pointArray.length;p++) {
 	point = pointArray[p];
 	xy = point.split(",");
 	// polygons are specified on a 1-1000 scale.
-	poly.push([(xy[0]-500)/2+320, xy[1]/2]); 
+	poly.push([(xy[0]-500)*scale+320, xy[1]*scale]); 
     }
     return poly;
 }
@@ -100,7 +101,14 @@ function loadFragments()
     colours = new Array();
     borderColours = new Array();
 
-    shape = "teapot";
+    if(stage == 0) {
+	shape = "teapot";
+    } else if (stage == 1) {
+	shape = "diamond";
+    } else if (stage == 2) {
+	shape = "vase";
+    }
+
     
     request = new XMLHttpRequest();
     request.open("GET", "resources/"+shape+".shattered.poly",false); // Blocking, todo
@@ -144,6 +152,8 @@ function resetGame()
     loadFragments();
     resetLife();
     gameOverTimeout = 0;
+    score = 0;
+    tagOffset = 0;
 }
 
 function resetLife()
@@ -156,7 +166,8 @@ function resetLife()
     dy = -8;
     launchTimeout = 80;
     launchDir = 1; // Right
-    tagOffset = 0;
+    startSound.play();
+
 }
 
 function init()
@@ -166,11 +177,13 @@ function init()
     bullImage = getImage("bull");
     backgroundImage = getImage("chinashop-640");
     titleImage = getImage("title");
-    springSound = new Audio("audio/boing.wav");
+    hitSound = new Audio("audio/blip.wav");
+    startSound = new Audio("audio/start.wav");
     makeTitleBitmaps();
     makePriceBitmap();
     frameCounter = 0;
     tagOffset = 0;
+    stage = 0;
     return true;
 }
 
@@ -367,7 +380,7 @@ function intersectVertices(points, collisions, ballx,bally,ballxv,ballyv, ballRa
 function animate()
 {
     if(scrollOn >1) {
-	scrollOn *= 0.7;
+	scrollOn *= 0.8;
 	}
     else {
 	scrollOn = 0;
@@ -447,9 +460,11 @@ function animate()
 	ctx.stroke();
 	if (shattered) {
 	    closest.obj.alive = false;
+	    score += 2;
 	} else {
 	    shattered = true;
 	    }
+	hitSound.play()
     } else {
 	x += dx;
 	y += dy;
@@ -507,6 +522,16 @@ function draw() {
     frameCounter += 1;
     if(mode == MODE_TITLE) {
 	ctx.drawImage(titleBitmap, 0, 0);
+	ctx.beginPath();
+	a = 381;
+	ctx.moveTo(a+stage*80, 400);
+	ctx.lineTo(a+stage*80+80, 400);
+	ctx.lineTo(a+stage*80+80, 475);
+	ctx.lineTo(a+stage*80, 475);
+	ctx.lineWidth = 5;
+	ctx.strokeStyle = '#ffff00';
+	ctx.closePath();
+	ctx.stroke();
 	return;
     }
 
@@ -588,6 +613,7 @@ function draw() {
     if(gameOverTimeout > 0) {
 	drawString(ctx, "GAME OVER", 320-14*4.5, 400);
     }
+    drawString(ctx, "$"+score, 8, 8);
 
 }
 
@@ -618,7 +644,11 @@ if (canvas.getContext('2d')) {
 	if(c == 81) {
 	    stopRunloop=true;
 	}
-	if(c == 32) {
+	if(c == 39 && mode == MODE_TITLE) {
+	    stage = (stage+1)%3;
+	}
+
+	if(c == 32 || c==37) {
 	    if(mode == MODE_TITLE) {
 		resetGame();
 		mode = MODE_PLAY;

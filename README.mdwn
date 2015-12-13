@@ -1,0 +1,10 @@
+# Wrecking Bull
+
+This is an entry into Ludum Dare #34 by Jim MacArthur.
+
+Ben is a bull for hire. He's been hired by Mr Delaunay to smash another china shop's stock. You control Ben's skateboard and have to keep Ben inside the shop.
+
+In other words, it's a clone of Breakout. The main difference is that the blocks are arbitrary polygons. The collision resolving code becomes significantly more complicated because of this. It should model a circular projectile bouncing off both vertices and edges of a polygon accurately, although there are almost certainly some glitches in the algorithm which was written in a few hours.
+
+Everything necessary to run game should be in the js/ subdirectory after checkout. The top-level directory contains some tools used to make the polygon sets. The shapes start off as simple polygons made in Inkscape. From then, you can extract just the path data into an 'svgextract' file. poly-processor.py will turn that into raw polygon data (one polygon per line) and 'shatter.py' will then create a random (but approximately evenly distributed) network of points which should fit onto the area of the polygon. The Voronoi diagram is calculated from those points, and the intersection of the voronoi diagram and the original shape is taken. This becomes the 'shattered' version. Both the original raw polygon data and the shattered version are copied to the js/resources subdirectory.
+

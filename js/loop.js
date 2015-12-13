@@ -109,7 +109,7 @@ function loadFragments()
 	shape = "vase";
     }
 
-    
+    totalFragments = 0;
     request = new XMLHttpRequest();
     request.open("GET", "resources/"+shape+".shattered.poly",false); // Blocking, todo
     request.send(null);
@@ -119,6 +119,7 @@ function loadFragments()
 	line = lineArray[l];
 	poly = loadPolygon(line)
 	fragments.push(new TaggedPoly("poly"+l, poly, null));
+	totalFragments += 1;
 	col = "#"
 	bcol = "#"
 	r = Math.floor(Math.random()*64);
@@ -154,6 +155,20 @@ function resetGame()
     gameOverTimeout = 0;
     score = 0;
     tagOffset = 0;
+    winTimeout = 0;
+}
+
+function nextLevel()
+{
+    // Subset of resetgame, could be combined.
+    frameCounter = 0;
+    scrollOn = 480;
+    shattered = false;
+    loadFragments();
+    resetLife();
+    gameOverTimeout = 0;
+    winTimeout = 0
+    tagOffset = 0;
 }
 
 function resetLife()
@@ -164,9 +179,16 @@ function resetLife()
     y = baty;
     dx = -8;
     dy = -8;
+    ballRadius = 16;
+    if(cheatMode) {
+	dy = -32;
+	ballRadius = 64;
+	}
     launchTimeout = 80;
     launchDir = 1; // Right
     startSound.play();
+    tagAngle = 0;
+
 
 }
 
@@ -179,11 +201,15 @@ function init()
     titleImage = getImage("title");
     hitSound = new Audio("audio/blip.wav");
     startSound = new Audio("audio/start.wav");
+    wallSound = new Audio("audio/wall.wav");
+    winSound = new Audio("audio/win.wav");
+    batSound = new Audio("audio/bat.wav");
     makeTitleBitmaps();
     makePriceBitmap();
     frameCounter = 0;
     tagOffset = 0;
     stage = 0;
+    cheatMode = false;
     return true;
 }
 
@@ -385,8 +411,8 @@ function animate()
     else {
 	scrollOn = 0;
 	}
-    if(x > SCREENWIDTH || x<0)  dx = -dx;
-    if(y > SCREENHEIGHT || y<0)  dy = -dy;
+    if(x > SCREENWIDTH || x<0) { dx = -dx; wallSound.play(); }
+    if(y > SCREENHEIGHT || y<0) { dy = -dy; wallSound.play(); }
 
     if(launchTimeout > 0) {
 	launchTimeout -= 1;
@@ -394,24 +420,30 @@ function animate()
 	dx = launchDir*8;
 	y = baty;
     }
-    var ball = { 'x': x, 'y': y, 'dx': dx, 'dy': dy, 'radius': 16 };
+    var ball = { 'x': x, 'y': y, 'dx': dx, 'dy': dy, 'radius': ballRadius };
     collisions = new Array();
     closest = null;
     lastCollisionObjectID = null;
     if(y > (baty - ball.radius) && dy > 0) {
 	if(x > batx-8 && x < (batx+playerImage.width+8) ) {
 	    dy = -Math.abs(dy);
+	    batSound.play();
 	}
 	if(y>470) {
-	    lives -= 1;
-	    if(lives <= 0) {
-		// Hacked game end mode
-		gameOverTimeout = 100;
-		y = 1000;
-		dy = 0;
-		return;
+	    if(cheatMode || winTimeout > 0) {
+		dy = -dy;
 	    }
-	    resetLife();
+	    else {
+		lives -= 1;
+		if(lives <= 0) {
+		    // Hacked game end mode
+		    gameOverTimeout = 100;
+		    y = 1000;
+		    dy = 0;
+		    return;
+		}
+		resetLife();
+	    }
 	}
     }
     else
@@ -461,6 +493,13 @@ function animate()
 	if (shattered) {
 	    closest.obj.alive = false;
 	    score += 2;
+	    totalFragments -= 1;
+	    if(totalFragments <= 1) {
+		// For some reason we always have 1 fragment left when the game's finished...
+		winTimeout = 100;
+		winSound.play();
+	    }
+	    console.log("Fragments remaining: "+totalFragments);
 	} else {
 	    shattered = true;
 	    }
@@ -473,6 +512,13 @@ function animate()
 	gameOverTimeout -= 1;
 	if(gameOverTimeout ==0) {
 	    mode = MODE_TITLE;
+	}
+    }
+    if(winTimeout > 0) {
+	winTimeout -= 1;
+	if(winTimeout ==0) {
+	    stage = (stage+1) % 3;
+	    nextLevel();
 	}
     }
 }
@@ -537,11 +583,11 @@ function draw() {
 
     ctx.drawImage(playerImage, batx, baty);
     ctx.beginPath();
-    ctx.arc(x, y, 20, 0, 2 * Math.PI, false);
+    ctx.arc(x, y, ballRadius*1.2, 0, 2 * Math.PI, false);
     ctx.fillStyle = 'rgba(255,255,0,0.5)';
     ctx.fill();
     ctx.beginPath();
-    ctx.arc(x, y, 16, 0, 2 * Math.PI, false);
+    ctx.arc(x, y, ballRadius, 0, 2 * Math.PI, false);
     ctx.fillStyle = 'rgba(255,255,0,1.0)';
     ctx.fill();
     ctx.save();
@@ -593,7 +639,7 @@ function draw() {
 	ctx.save()
 	ctx.lineWidth=2;
 	ctx.strokeStyle="#000000";
-	ctx.translate(400,300+tagOffset);
+	ctx.translate(400,200+tagOffset);
 	ctx.rotate(tagAngle);
 	ctx.moveTo(0,0);
 	ctx.lineTo(64,0);
@@ -614,7 +660,9 @@ function draw() {
 	drawString(ctx, "GAME OVER", 320-14*4.5, 400);
     }
     drawString(ctx, "$"+score, 8, 8);
-
+    if(cheatMode) {
+	drawString(ctx, "CHEAT MODE", 320-5*14, 420)
+    }
 }
 
 function processKeys() {
@@ -659,6 +707,7 @@ if (canvas.getContext('2d')) {
 		mode = MODE_TITLE;
 	    }
 	}
+	if(c==221 && mode == MODE_TITLE) cheatMode = !cheatMode;
     };
 
     body.onkeyup = function (event) {

@@ -156,6 +156,7 @@ function resetGame()
     score = 0;
     tagOffset = 0;
     winTimeout = 0;
+    ballSpeed = Math.sqrt(128);
 }
 
 function nextLevel()
@@ -427,7 +428,15 @@ function animate()
     if(y > (baty - ball.radius) && dy > 0) {
 	if(x > batx-8 && x < (batx+playerImage.width+8) ) {
 	    dy = -Math.abs(dy);
+	    angle=Math.atan2(dy,dx);
+	    dx = Math.cos(angle)*ballSpeed;
+	    dy = Math.sin(angle)*ballSpeed;
 	    batSound.play();
+
+	    // If you're holding a key down, give the ball an extra boost
+	    if(keysDown[37] || keysDown[65]) { dx -= 2; }
+	    if(keysDown[39] || keysDown[68]) { dx += 2; }
+
 	}
 	if(y>470) {
 	    if(cheatMode || winTimeout > 0) {
